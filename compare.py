@@ -1,8 +1,72 @@
 import argparse
 import ast
+import numpy as np
 
-from file_normalization import FileOptimizer
-from plagiat_detection import PlagiatScanner
+class FileOptimizer(ast.NodeTransformer):
+
+    def __init__(self):
+        self._arg_count = 0
+        self.var_dict = {}
+        self._var_count = 0
+
+    def visit_arg(self, node):
+        node.arg = "arg_{}".format(self._arg_count)
+        self._arg_count += 1
+        self.generic_visit(node)
+        return node
+
+    def visit_Name(self, node):
+        if node.id not in self.var_dict:
+            self.var_dict[node.id] = "var_{}".format(self._var_count)
+        node.id = self.var_dict[node.id]
+        self._var_count += 1
+        self.generic_visit(node)
+        return node
+
+    def visit_Module(self, node: ast.Module):
+        ast.get_docstring(node, clean=False)
+        self.generic_visit(node)
+        return node
+
+    def visit_FunctionDef(self, node: ast.FunctionDef):
+        ast.get_docstring(node, clean=True)
+        self.generic_visit(node)
+        return node
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
+        ast.get_docstring(node, clean=True)
+        self.generic_visit(node)
+        return node
+
+    def visit_ClassDef(self, node: ast.ClassDef):
+        ast.get_docstring(node, clean=True)
+        self.generic_visit(node)
+        return node
+    
+
+class PlagiatScanner():
+
+    def __init__(self, code1 = None, code2 = None):
+        self.code1 = code1
+        self.code2 = code2
+
+    def compute_Levenshtein_distance(self):
+        len1, len2 = len(self.code1), len(self.code2)
+        if len1 > len2:
+            self.code1, self.code2 = self.code2, self.code1
+            len1, len2 = len2, len1
+
+        current_row = range(len1 + 1)
+        for i in range(1, len2 + 1):
+            previous_row, current_row = current_row, [i] + [0] * len1
+            for j in range(1, len1 + 1):
+                add, delete, change = previous_row[j] + 1, current_row[j - 1] + 1, previous_row[j - 1]
+                if self.code1[j - 1] != self.code2[i - 1]:
+                    change += 1
+                current_row[j] = min(add, delete, change)
+
+        return current_row[len1]
+
 
 def main():
     parser = argparse.ArgumentParser(description="Antiplagiat tool")
