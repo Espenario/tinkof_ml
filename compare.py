@@ -46,7 +46,7 @@ class FileOptimizer(ast.NodeTransformer):
 
 class PlagiatScanner():
 
-    def __init__(self, code1 = None, code2 = None):
+    def __init__(self, code1=None, code2=None):
         self.code1 = code1
         self.code2 = code2
 
@@ -69,10 +69,9 @@ class PlagiatScanner():
 
         return current_row[len1]
 
-def yes_no_dialog():
-    default_answer="yes"
-    answers = {"yes":1, "y":1, "ye":1,
-        "no":0, "n":0}
+def yes_no_dialog(default_answer="yes"):
+    answers = {"yes" : 1, "y" : 1, "ye" : 1,
+        "no" : 0, "n" : 0}
     if default_answer == None:
         tip = " [y/n] "
     elif default_answer == "yes":
@@ -164,7 +163,7 @@ def main():
                 )
             )
         except Exception:
-            score_list.append(plagiat_scanner.compute_Levenshtein_distance())
+            score_list.append(0)
 
     with open(args.scores, mode="w", encoding="utf-8") as file:
         file.write('\n'.join(str(x) for x in score_list))
