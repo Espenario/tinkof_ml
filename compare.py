@@ -94,7 +94,8 @@ def main():
             file1 = pair.split(' ')[0]
             file2 = pair.split(' ')[1]
         except Exception:
-            print(f"В {i + 1} строке в файле {args.input} задано меньше 2 файлов")
+            print(f"В {i + 1} строке в файле "
+                  f"{args.input} задано меньше 2 файлов")
             raise SystemExit
 
         with open(file1, mode="r", encoding="utf-8") as f:
