@@ -1,6 +1,6 @@
 import argparse
 import ast
-import numpy as np
+import re
 
 class FileOptimizer(ast.NodeTransformer):
 
@@ -60,7 +60,9 @@ class PlagiatScanner():
         for i in range(1, len2 + 1):
             previous_row, current_row = current_row, [i] + [0] * len1
             for j in range(1, len1 + 1):
-                add, delete, change = previous_row[j] + 1, current_row[j - 1] + 1, previous_row[j - 1]
+                add = previous_row[j] + 1
+                delete = current_row[j - 1] + 1
+                change = previous_row[j - 1]
                 if self.code1[j - 1] != self.code2[i - 1]:
                     change += 1
                 current_row[j] = min(add, delete, change)
@@ -84,12 +86,16 @@ def main():
         pairs = file.read().rstrip().split('\n')
 
     score_list = []
-    #print(pairs)
 
-    for pair in pairs:
-        #print(pair)
-        file1 = pair.split(' ')[0]
-        file2 = pair.split(' ')[1]
+    for i, pair in enumerate(pairs):
+        pair = re.sub("\s\s+" , " ", pair)
+
+        try:
+            file1 = pair.split(' ')[0]
+            file2 = pair.split(' ')[1]
+        except Exception:
+            print(f"В {i + 1} строке в файле {args.input} задано меньше 2 файлов")
+            raise SystemExit
 
         with open(file1, mode="r", encoding="utf-8") as f:
             code1_before = f.read()
@@ -100,7 +106,7 @@ def main():
         tree2_before_opt = ast.parse(code2_before)
 
         optimizer1 = FileOptimizer()
-        optimizer2= FileOptimizer()
+        optimizer2 = FileOptimizer()
 
         tree1_after_opt = optimizer1.visit(tree1_before_opt)
         tree2_after_opt = optimizer2.visit(tree2_before_opt)
@@ -110,8 +116,16 @@ def main():
 
         plagiat_scanner = PlagiatScanner(code1_after, code2_after)
         
-        score_list.append(round(plagiat_scanner.compute_Levenshtein_distance()/ ((len(code1_after) + len(code2_after)) / 2), 4))
-    
+        try:
+            score_list.append(
+                round(
+                    plagiat_scanner.compute_Levenshtein_distance()
+                    / ((len(code1_after) + len(code2_after)) / 2), 4
+                )
+            )
+        except Exception:
+            score_list.append(plagiat_scanner.compute_Levenshtein_distance())
+
     with open(args.scores, mode="w", encoding="utf-8") as file:
         file.write('\n'.join(str(x) for x in score_list))
 
