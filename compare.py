@@ -69,6 +69,43 @@ class PlagiatScanner():
 
         return current_row[len1]
 
+def yes_no_dialog():
+    default_answer="yes"
+    answers = {"yes":1, "y":1, "ye":1,
+        "no":0, "n":0}
+    if default_answer == None:
+        tip = " [y/n] "
+    elif default_answer == "yes":
+        tip = " [y/n] "
+    elif default_answer == "no":
+        tip = " [y/n] "
+    else:
+        raise ValueError(f'Неверное значение: {default_answer = }')
+    while True:
+        print(f"Хотите ли продолжить сравнение на плагиат{tip}: ", end="")
+        user_answer = input().lower()
+        if default_answer is not None and user_answer == '':
+            return answers[default_answer]
+        elif user_answer in answers:
+            return answers[user_answer]
+        else:
+            print("Пожалуйста, введите yes/y или no/n\n")
+
+def analize_file_types(file1, file2, index):
+    search1 = re.search(r'.py', file1, re.M|re.I)
+    search2 = re.search(r'.py', file2, re.M|re.I)
+    if not search1:
+        print(f"Файл {file1} (строка {index + 1}), " 
+              f"предложенный для сравнения, не является python-файлом")
+        answer = yes_no_dialog()
+        if not answer:
+            raise SystemExit
+    if not search2:
+        print(f"Файл {file2} (строка {index + 1}), " 
+              f"предложенный для сравнения, не является python-файлом")
+        answer = yes_no_dialog()
+        if not answer:
+            raise SystemExit
 
 def main():
     parser = argparse.ArgumentParser(description="Antiplagiat tool")
@@ -97,6 +134,8 @@ def main():
             print(f"В {i + 1} строке в файле "
                   f"{args.input} задано меньше 2 файлов")
             raise SystemExit
+
+        analize_file_types(file1, file2, i)
 
         with open(file1, mode="r", encoding="utf-8") as f:
             code1_before = f.read()
