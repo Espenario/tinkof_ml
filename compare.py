@@ -8,6 +8,12 @@ class FileOptimizer(ast.NodeTransformer):
         self._arg_count = 0
         self.var_dict = {}
         self._var_count = 0
+        self.func_dict = {}
+        self._func_count = 0
+        self.asfunc_dict = {}
+        self._asfunc_count = 0
+        self.class_dict = {}
+        self._class_count = 0
 
     def visit_arg(self, node):
         node.arg = "arg_{}".format(self._arg_count)
@@ -30,16 +36,28 @@ class FileOptimizer(ast.NodeTransformer):
 
     def visit_FunctionDef(self, node: ast.FunctionDef):
         ast.get_docstring(node, clean=True)
+        if node.name not in self.func_dict:
+            self.func_dict[node.name] = "func_{}".format(self._func_count)
+        node.name = self.func_dict[node.name]
+        self._func_count += 1
         self.generic_visit(node)
         return node
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef):
         ast.get_docstring(node, clean=True)
+        if node.name not in self.asfunc_dict:
+            self.asfunc_dict[node.name] = "async_func_{}".format(self._asfunc_count)
+        node.name = self.asfunc_dict[node.name]
+        self._asfunc_count += 1
         self.generic_visit(node)
         return node
 
     def visit_ClassDef(self, node: ast.ClassDef):
         ast.get_docstring(node, clean=True)
+        if node.name not in self.class_dict:
+            self.class_dict[node.name] = "class_{}".format(self._class_count)
+        node.name = self.class_dict[node.name]
+        self._class_count += 1
         self.generic_visit(node)
         return node
     
